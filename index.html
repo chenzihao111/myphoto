@@ -314,7 +314,7 @@ function setBigImg(){
 		setGesture({
 			el:oImg,
 			start:function(e){
-				startScale = css(this,'scale');		
+				startScale = css(this,'scale')/100;		
 				startRotate = css(this,'rotate');
 			},
 			change:function(e){
