@@ -1,2 +1,3 @@
-# chenzihao111.github.io
-myphoto
+多指操作
+缓冲运动
+下拉加载
