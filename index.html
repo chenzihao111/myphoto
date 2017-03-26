@@ -535,13 +535,14 @@ function mScroll(init){
 		var el = init.el
 		var isGestrue = false;	
 		var oldDis = 0;		
-		var oldDeg = 0;		
+		var oldDeg = 0;	
+		var startTouchPoint = [];
 		if(!el)return;
 		
 		el.addEventListener('touchstart',function(e){	
 		        console.log(e)		
 			if(e.touches.length >=2){
-				alert(1)
+				
 				isGestrue = true;
 				var startTouchPoint = [];
 				startTouchPoint[0] = {a:e.touches[0].pageX,b:e.touches[0].pageY};
@@ -560,6 +561,7 @@ function mScroll(init){
 				var newDeg = getDeg(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b)
 				e.scale = newDis/oldDis;
 				e.rotation = newDeg - oldDeg;
+				alert(e.scale)
 				init.change && init.change.call(el,e)
 			}
 		},false)
