@@ -314,14 +314,19 @@ function setBigImg(){
 		setGesture({
 			el:oImg,
 			start:function(e){
-				startScale = css(el,'scale');		
-				startRotate = css(el,'rotate');
+				startScale = css(this,'scale');		
+				startRotate = css(this,'rotate');
 			},
 			change:function(e){
 				var scale = startScale * e.scale;
+				if(scale > maxScale){
+					scale = maxScale;
+				} else if(scale < minScale){
+					scale = minScale;
+				}				
 				tset.innerHTML = scale
-				css(el,'scale',scale)
-				css(el,'rotate',startRotate+e.rotation)
+				css(this,'scale',scale)
+				css(this,'rotate',startRotate+e.rotation)
 			},
 			end:function(e){
 				var deg = css(this,'rotate');
