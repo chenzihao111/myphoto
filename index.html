@@ -312,8 +312,8 @@ function setBigImg(){
 		setGesture({
 			el:oImg,
 			start:function(e){
-				var startScale = css(el,'scale');		
-				var startRotate = css(el,'rotate');
+				startScale = css(el,'scale');		
+				startRotate = css(el,'rotate');
 			},
 			change:function(e){
 				var scale = startScale * e.scale;
@@ -561,7 +561,6 @@ function mScroll(init){
 				var newDeg = getDeg(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b)
 				e.scale = newDis/oldDis;
 				e.rotation = newDeg - oldDeg;
-				alert(e.scale)
 				init.change && init.change.call(el,e)
 			}
 		},false)
