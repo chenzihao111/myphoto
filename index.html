@@ -522,56 +522,53 @@ function mScroll(init){
 }
 </script>
 <script>
-	//求角度
-	function getDeg(a,b){
-		return Math.atan2(b,a)*180/Math.PI; 
+function getDis(point1,point2){
+	var x = point2.x - point1.x;
+	var y = point2.y - point1.y;
+	return Math.sqrt(x*x + y*y);
+}
+function getDeg(point1,point2){
+	var x = point2.x - point1.x;
+	var y = point2.y - point1.y;
+	return Math.atan2(y,x)*180/Math.PI; 
+}
+function setGesture(init){
+	var el = init.el;
+	var isGestrue = false; 
+	var startPoint = [];
+	if(!el){
+		return;
 	}
-	//直角求斜边
-	function getC(a,b){
-		return Math.sqrt(a*a + b*b)
-	}
-    /*图片旋转和缩放的方法*/
-	function setGesture(init){
-		var el = init.el
-		var isGestrue = false;	
-		var oldDis = 0;		
-		var oldDeg = 0;	
-		var startTouchPoint = [];
-		if(!el)return;
-		
-		el.addEventListener('touchstart',function(e){	
-		        console.log(e)		
-			if(e.touches.length >=2){
-				
-				isGestrue = true;
-				var startTouchPoint = [];
-				startTouchPoint[0] = {a:e.touches[0].pageX,b:e.touches[0].pageY};
-				startTouchPoint[1] = {a:e.touches[1].pageX,b:e.touches[1].pageY};
-				oldDis = getC(startTouchPoint[1].a-startTouchPoint[0].a,startTouchPoint[1].b-startTouchPoint[0].b);
-				oldDeg = getDeg(startTouchPoint[1].a-startTouchPoint[0].a,startTouchPoint[1].b-startTouchPoint[0].b)
-				init.start && init.start.call(el,e)
+	el.addEventListener('touchstart', function(e) {
+		if(e.touches.length >= 2){
+			isGestrue = true; //记录当前用户触发了gesture
+			startPoint[0] = {x:e.touches[0].pageX,y:e.touches[0].pageY};
+			startPoint[1] = {x:e.touches[1].pageX,y:e.touches[1].pageY}; 
+			init.start&&init.start.call(el,e);
+		}
+	});
+	el.addEventListener('touchmove', function(e) {
+		if(isGestrue&&e.touches.length >= 2){
+			var nowPoint = [];
+			nowPoint[0] = {x:e.touches[0].pageX,y:e.touches[0].pageY};
+			nowPoint[1] = {x:e.touches[1].pageX,y:e.touches[1].pageY};
+			var startDis = getDis(startPoint[0],startPoint[1]);
+			var nowDis = getDis(nowPoint[0],nowPoint[1]);
+			var startDeg = getDeg(startPoint[0],startPoint[1]);
+			var nowDeg = getDeg(nowPoint[0],nowPoint[1]);
+			e.scale = nowDis/startDis;
+			e.rotation = nowDeg - startDeg;
+			init.change&&init.change.call(el,e);
+		}
+	});
+	el.addEventListener('touchend', function(e) {
+		if(isGestrue){
+			if(e.touches.length < 2 || e.targetTouches.length < 1){
+				isGestrue = false;
+				init.end&&init.end.call(el,e);
 			}
-		},false)
-		el.addEventListener('touchmove',function(e){				
-			if(isGestrue == true){
-				var nowPoint = [];	
-				nowPoint[0] = {a:e.touches[0].pageX,b:e.touches[0].pageY};
-				nowPoint[1] = {a:e.touches[1].pageX,b:e.touches[1].pageY};
-				var newDis = getC(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b);
-				var newDeg = getDeg(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b)
-				e.scale = newDis/oldDis;
-				e.rotation = newDeg - oldDeg;
-				init.change && init.change.call(el,e)
-			}
-		},false)
-		el.addEventListener('touchend', function(e) {
-			if(isGestrue){
-				if(e.touches.length < 2 || e.targetTouches.length < 1){
-					isGestrue = false;
-					init.end&&init.end.call(el,e);
-				}
-			}
-		});				
-	}
+		}
+	});
+}
 </script>
 </html>
