@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Document</title>
+<meta name="viewport" content="width=device-width,user-scalable=no" />
+<link rel="stylesheet" type="text/css" href="bs/css/bootstrap.css"/>
+<script>
+    (function(){
+		function setRem(){
+			var html = document.documentElement;
+			var htmlWidth = html.clientWidth;
+			html.style.fontSize = htmlWidth/8 + 'px';			
+		}
+		setRem()
+		window.addEventListener('orientation' in window?"deviceorientation":"resize",setRem,false)
+	})()
+
+</script>
+<style type="text/css">
+body,
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+a{ text-decoration:none; color:#FFF;}
+ul,h1 {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#header {
+  height: 1rem;
+  width: 100%;
+  font-size: 0.2986666666666667rem;
+  background: #000;
+  text-align: center;
+  line-height: 1rem;
+  color: #FFF;
+  letter-spacing: 0.021333333333333333rem;
+}
+#main {
+  position: absolute;
+  top: 1rem;
+  left: 0;
+  right: 0;
+  bottom: 0.6rem;
+  background: #CCC;
+  width: 100%;
+  overflow: hidden;
+}
+#contentBox {
+  width: 100%;
+  background: #ccc;
+  overflow:hidden;
+}
+#contentBox li {
+  width: 3.8rem;
+  float: left;
+  margin: .1rem;
+  background:#fff url(pics/loadingImg.gif) no-repeat center center;
+  height: 3.8rem;
+}
+#contentBox li img {
+  display: block;
+  width: 100%;
+  opacity:0;
+  transition:1s;
+}
+#footer {
+  height: 0.6rem;
+  width: 100%;
+  background: #000;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+/*大图预览*/
+#dialog{
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0.6rem;
+  background: #CCC;
+  width: 100%;
+  overflow: hidden;	
+  -webkit-transform::scale(0,0);
+  transform:scale(0,0)
+}
+#img_watch{
+  height: 1rem;
+  width: 100%;
+  font-size: 0.2986666666666667rem;
+  background: #000;
+  text-align: center;
+  line-height: 1rem;
+  color: #FFF;
+  letter-spacing: 0.021333333333333333rem;	
+}
+#returnBtn{position:absolute; left:0; height:1rem; width:1rem; text-align:center; line-height:1rem;}
+#imgControl{
+	width:100%; 
+	height:.8rem; 
+	font-size:.3rem;
+	border-bottom:1px solid #999;
+	position:relative;
+}
+#imgControl li{
+	float:left;
+	width:25%;
+	text-align:center;
+	border-right:1px solid #999;
+	box-sizing:border-box;
+	line-height:.8rem;
+	background:#FFF;
+}
+#bigImgBox{
+	width:100%;
+	position:absolute;
+	top:1.8rem;
+	left:0; 
+	right:0;
+	bottom:0;
+}
+#bigImg{
+	position: absolute;
+	left: 2rem;
+	top: 50%;
+	margin-top: -2rem;
+	width: 4rem;
+	height: 4rem;
+}
+#inner{position:relative;}
+#inner footer{
+	position:absolute;
+	left:0;
+	right:0;
+	bottom:-.5rem;
+	height:.2rem;
+	line-height:.2rem;
+	text-align:center;
+	font-size:.3rem;
+	opacity:1;
+}
+/*getBoundingClientRect是DOM元素到浏览器可视范围的距离（不包含文档卷起的部分）。该函数返回一个Object对象，该对象有6个属性：top,lef,right,bottom,width,height；这里的top、left和css中的理解很相似，width、height是元素自身的宽高，但是right，bottom和css中的理解有点不一样。right是指元素右边界距窗口最左边的距离，bottom是指元素下边界距窗口最上面的距离。*/
+</style>
+</head>
+<body>
+   <header id="header">MY PHONE</header>
+   <section id="main">
+      <div id="inner">
+        <ul id="contentBox">                                
+        </ul>
+        <footer id="load">加载更多</footer>
+      </div> 
+   </section>
+   <footer id="footer"></footer>
+   <div id="dialog">
+       <h1 id="img_watch">大图预览<a href="javascript:;" id="returnBtn" class="glyphicon glyphicon-chevron-left"></a></h1>
+       <div id="imgControl">
+           <ul>
+              <li>向左旋转90°</li>
+              <li>向右旋转90°</li>
+              <li>放大</li>
+              <li>缩小</li>
+           </ul> 
+       </div>
+       <div id="bigImgBox"><img src="pics/1.jpg" alt="" id="bigImg"></div>
+   </div>
+</body>   
+<script type="text/javascript" src="m.Tween.js"></script>
+<script type="text/javascript">
+document.addEventListener('touchstart', function(e) {
+	e.preventDefault();
+});
+
+(function(){
+	var box = document.querySelector('#main');
+	var inner = box.querySelector('#inner');
+	var list = document.getElementById('contentBox');
+	var oLoad = box.querySelector('#load');
+	var lis = list.children;
+	var oDialog = document.querySelector('#dialog');
+	var oBigImgBox = document.querySelector('#bigImg');
+	console.log(oBigImgBox)
+	console.log(lis)
+	var dataImg = [];
+	//0-25
+	for(var i=0; i<50; i++){
+		dataImg.push("pics/" + (i%16+1) + ".jpg");
+	}
+	var isEnd = false;
+	var start =0;
+	var length = 8; //一次加载几张
+
+
+	creatLi()
+	function creatLi(){
+		if(start>dataImg.length){
+			oLoad.innerHTML = "NO Image";
+			setTimeout(function(){
+				oLoad.style.opacity = 0;
+				MTween({
+					el:inner,
+					target:{translateY:-inner.offsetHeight+box.clientHeight},
+					time:300,
+					type:'easeBoth'
+				})					
+			},1000)
+			return
+		}
+		var end = start + length;
+		end = end<dataImg.length?end:dataImg.length;
+		for(var i=start; i<end; i++){
+			var li = document.createElement('li');		
+			li.src =  dataImg[i]
+			li.isload = true;	
+			console.log(li)	
+			li.addEventListener('touchstart',function(){
+                  this.isMove = false; 
+			},false)			
+			li.addEventListener('touchmove',function(){
+                  this.isMove = true; 
+			},false)			
+			li.addEventListener('touchend',function(){
+				if(this.isMove)return;
+				oDialog.style.transition = "1s";
+				oDialog.style.transform = "scale(1,1)";
+				console.log(oBigImgBox)
+				console.log(this.children[0].src)
+				oBigImgBox.src = this.children[0].src;
+			},false)
+			box.children[0].children[0].appendChild(li)
+		}
+		createImg();
+		oLoad.style.opacity = 0;
+	}
+	/*判断li是否进入到box可视区*/	
+	function createImg(){
+	   var boxRect = box.getBoundingClientRect();
+	   var boxBottom = boxRect.bottom;
+       for(var i=0; i<lis.length; i++){
+		   var liTop = lis[i]. getBoundingClientRect().top;
+		   if(liTop<boxBottom && lis[i].isload){
+			   lis[i].isload =false;
+			   showImg(lis[i])
+		   }  //当前Li进入box可视区
+	   }
+	}
+	/*进入到后创建Li里面对应的图片*/
+	function showImg(li){
+		var img = new Image();
+		img.src = li.src;
+		img.onload = function(){
+			li.appendChild(img);
+			setTimeout(function(){
+				img.style.opacity = 1;
+			},30)
+		}
+		img.onerror = function(){
+		}		
+	}
+	function setScroll(){
+		/*添加contentBox的上下滑动效果*/
+		mScroll({
+			el:box,
+			offBar: false,
+			start : function(e){
+				console.log('手指按下要执行的函数')
+				var innerRect = Math.round(css(inner,"translateY"));
+				var minTop = box.clientHeight - inner.offsetHeight
+				if(innerRect-5 < minTop){
+					oLoad.style.opacity = 1;
+					isEnd = true;
+				}else{
+					oLoad.style.opacity = 0;
+					isEnd = false;
+				}
+			},
+			move : function(){
+				createImg()
+				console.log('滚动时发生的距离')
+			},
+			end : function(e){
+				var innerRect = Math.round(css(inner,"translateY"));
+				var minTop = box.clientHeight - inner.offsetHeight
+				if(innerRect-5 <= minTop && isEnd){
+					    start+=length;
+					    creatLi()
+						
+                        clearInterval(inner.timer) // 清除回弹
+				}
+			}			
+		})		 
+	}
+	setBigImg()
+	setScroll()
+})()
+function setBigImg(){
+	window.onload = function(){
+		var oImg = document.querySelector('#bigImg');
+		/*多指操作-图片旋转和缩放start*/
+		var startRotate = 0;
+		var startScale = 0;
+		var maxScale = 1.5;
+		var minScale = .5;	
+		css(oImg,"translateZ",.1)
+		setGesture({
+			el:oImg,
+			start:function(e){
+				var startScale = css(el,'scale');		
+				var startRotate = css(el,'rotate');
+			},
+			change:function(e){
+				var scale = startScale * e.scale;
+				if(scale>maxScale)scale=maxScale;
+				if(scale<minScale)scale=minScale;
+				
+				css(el,'scale',scale)
+				css(el,'rotate',startRotate+e.rotation)
+			},
+			end:function(e){
+				var deg = css(this,'rotate');
+				deg = Math.round(deg/90);
+				deg = deg*90;
+				MTween({
+					el:this,
+					target:{rotate:deg},
+					time: 300, 
+					type: "easeBoth"
+				}); 
+			}
+		})
+		
+		/*鼠标控制按钮-操作图片*/
+		var oImgControl = document.querySelector('#imgControl');
+		var oLi = oImgControl.querySelectorAll('li');
+		var timer;
+		
+		//封装改变图片的方法
+		var setImg = {
+			imgMove:function(target,show){
+				var currentDeg = css(target,'rotate')
+				var currentScale = css(target,'scale')
+				console.log(currentDeg)
+				switch(show){
+					case 'leftDeg': 
+					   currentDeg = Math.round(currentDeg/90)-1;
+					   currentDeg = currentDeg*90;
+					   break;
+					case 'rightDeg': 
+					   currentDeg = Math.round(currentDeg/90)+1;
+					   currentDeg = currentDeg*90;
+					   break;
+					case 'scale+': 
+					   currentScale *= 1.1;
+					   break;
+					case 'scale-': 
+					   currentScale *= .9;
+					   break;				   				   				      
+				}
+				
+				MTween({
+					el:target,
+					target:{rotate:currentDeg,scale:currentScale},
+					time:300,
+					type:'easeBoth'
+				})				
+			},
+			setRotate : function(init){
+				init.el.addEventListener('touchstart',function(){
+					init.fn(init.target,init.show)
+					timer = setInterval(function(){
+						init.fn.call(init,init.target,init.show)
+					},1000)
+				},false)			
+			},
+			touchEnd: function(init){
+				for(var i=0; i<init.el.length; i++){
+					init.el[i].addEventListener('touchend',function(){
+						clearInterval(timer)
+					},false)				
+				}			
+			}	
+		}
+	
+		//向左旋转90
+		setImg.setRotate({
+			el:oLi[0],
+			target:oImg,
+			fn:setImg.imgMove,
+			show: 'leftDeg'
+		})
+		//向右旋转90
+		setImg.setRotate({
+			el:oLi[1],
+			target:oImg,
+			fn:setImg.imgMove,
+			show: 'rightDeg'
+		})
+		//放大
+		setImg.setRotate({
+			el:oLi[2],
+			target:oImg,
+			fn:setImg.imgMove,
+			show: 'scale+'
+		})	
+		//缩小
+		setImg.setRotate({
+			el:oLi[3],
+			target:oImg,
+			fn:setImg.imgMove,
+			show: 'scale-'
+		})	
+		//清除定时器			
+		setImg.touchEnd({
+			el:[oLi[0],oLi[1],oLi[2],oLi[3]]
+		})
+		
+		/*关闭dialog大图显示层*/	
+		var oreturnBtn = document.querySelector('#returnBtn');
+		oreturnBtn.addEventListener('touchend',function(){
+			var oDialog = document.querySelector('#dialog');
+			oDialog.style.transform = 'scale(0,0)'
+		},false)	
+	}
+}
+function mScroll(init){
+	if(!init.el){
+		return;
+	}
+	var wrap = init.el;
+	var inner = init.el.children[0];
+	var scrollBar = document.createElement("div");	
+	var startPoint = 0;
+	var startEl = 0;
+	var lastY = 0;
+	var lastDis = 0;
+	var lastTime = 0;
+	var lastTimeDis = 0;
+	var back = document.documentElement.clientWidth/8;
+	var maxTranslate = wrap.clientHeight - inner.offsetHeight;
+	if(!init.offBar){
+		var scale = wrap.clientHeight/inner.offsetHeight;
+		inner.style.minHeight = "100%";
+		scrollBar.style.cssText = "width:4px;background:rgba(0,0,0,.5);position:absolute;right:0;top:0;border-radius:2px;opacity:0;transition:.3s opacity;";
+		wrap.appendChild(scrollBar);
+	}
+	css(inner,"translateZ",0.01);
+	inner.addEventListener('touchstart', function(e) {
+		maxTranslate = wrap.clientHeight - inner.offsetHeight;
+		if(!init.offBar){
+			if(maxTranslate >= 0) {
+				scrollBar.style.display = "none";
+			} else {
+				scrollBar.style.display = "block";
+			}
+			scale = wrap.clientHeight/inner.offsetHeight;
+			scrollBar.style.height = wrap.clientHeight * scale + "px";
+		}
+		clearInterval(inner.timer);
+		startPoint = e.changedTouches[0].pageY;
+		startEl = css(inner,"translateY");
+		lastY = startEl;
+		lastTime = new Date().getTime();
+		lastTimeDis = lastDis = 0;
+		(init.offBar)||(scrollBar.style.opacity = 1);
+		init.start && init.start();
+	});
+	inner.addEventListener('touchmove', function(e) {
+		var nowTime = new Date().getTime();
+		var nowPoint = e.changedTouches[0].pageY;
+		var dis = nowPoint - startPoint;
+		var translateY = startEl + dis;
+		if(translateY>back){
+			translateY=back
+		}else if(translateY < maxTranslate - back){
+			translateY = maxTranslate - back;
+		}
+		css(inner,"translateY",translateY);
+		(init.offBar)||css(scrollBar,"translateY",-translateY*scale);
+		lastDis = translateY - lastY;
+		lastY = translateY;
+		lastTimeDis = nowTime - lastTime;
+		lastTime = nowTime;
+		init.move　&& init.move();
+	});
+	inner.addEventListener('touchend', function(e) {
+		var type = "easeOut";
+		var speed = Math.round(lastDis / lastTimeDis*10);
+		speed = lastTimeDis <= 0?0 :speed;
+		var target = Math.round(speed*30 + css(inner,"translateY"));
+		
+		if(target > 0){
+			target = 0;
+			type = "backOut";
+		} else if(target < maxTranslate){
+			target = maxTranslate;
+			type = "backOut";
+		}
+		
+		MTween({
+			el:inner,
+			target: {translateY:target},
+			time: Math.round(Math.abs(target - css(inner,"translateY"))*1.8),
+			type: type,
+			callBack: function(){
+				(init.offBar) || (scrollBar.style.opacity = 0);
+			},
+			callIn: function(){
+				var translateY = css(inner,"translateY");
+				init.offBar||css(scrollBar,"translateY",-translateY*scale);
+				init.move　&& init.move();
+			}
+		});
+		init.end　&& init.end();
+	});
+}
+</script>
+<script>
+	//求角度
+	function getDeg(a,b){
+		return Math.atan2(b,a)*180/Math.PI; 
+	}
+	//直角求斜边
+	function getC(a,b){
+		return Math.sqrt(a*a + b*b)
+	}
+    /*图片旋转和缩放的方法*/
+	function setGesture(init){
+		var el = init.el
+		var isGestrue = false;	
+		var oldDis = 0;		
+		var oldDeg = 0;		
+		if(!el)return;
+		
+		el.addEventListener('touchstart',function(e){	
+		console.log(e)		
+			if(e.touches.length >=2){
+				isGestrue = true;
+				var startTouchPoint = [];
+				startTouchPoint[0] = {a:e.touches[0].pageX,b:e.touches[0].pageY};
+				startTouchPoint[1] = {a:e.touches[1].pageX,b:e.touches[1].pageY};
+				oldDis = getC(startTouchPoint[1].a-startTouchPoint[0].a,startTouchPoint[1].b-startTouchPoint[0].b);
+				oldDeg = getDeg(startTouchPoint[1].a-startTouchPoint[0].a,startTouchPoint[1].b-startTouchPoint[0].b)
+				init.start && init.start.call(el,e)
+			}
+		},false)
+		el.addEventListener('touchmove',function(e){				
+			if(isGestrue == true){
+				var nowPoint = [];	
+				nowPoint[0] = {a:e.touches[0].pageX,b:e.touches[0].pageY};
+				nowPoint[1] = {a:e.touches[1].pageX,b:e.touches[1].pageY};
+				var newDis = getC(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b);
+				var newDeg = getDeg(nowPoint[1].a-nowPoint[0].a,nowPoint[1].b-nowPoint[0].b)
+				e.scale = newDis/oldDis;
+				e.rotation = newDeg - oldDeg;
+				init.change && init.change.call(el,e)
+			}
+		},false)
+		el.addEventListener('touchend', function(e) {
+			if(isGestrue){
+				if(e.touches.length < 2 || e.targetTouches.length < 1){
+					isGestrue = false;
+					init.end&&init.end.call(el,e);
+				}
+			}
+		});				
+	}
+</script>
+</html>
