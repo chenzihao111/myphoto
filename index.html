@@ -317,9 +317,6 @@ function setBigImg(){
 			},
 			change:function(e){
 				var scale = startScale * e.scale;
-				if(scale>maxScale)scale=maxScale;
-				if(scale<minScale)scale=minScale;
-				alert(scale)
 				css(el,'scale',scale)
 				css(el,'rotate',startRotate+e.rotation)
 			},
