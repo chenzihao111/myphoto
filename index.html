@@ -303,7 +303,6 @@ document.addEventListener('touchstart', function(e) {
 function setBigImg(){
 	window.onload = function(){
 		var oImg = document.querySelector('#bigImg');
-		var tset = document.querySelector('#tset');
 		
 		/*多指操作-图片旋转和缩放start*/
 		var startRotate = 0;
@@ -324,7 +323,6 @@ function setBigImg(){
 				} else if(scale < minScale){
 					scale = minScale;
 				}				
-				tset.innerHTML = scale
 				css(this,'scale',scale*100)
 				css(this,'rotate',startRotate+e.rotation)
 			},
